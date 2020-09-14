@@ -1,0 +1,47 @@
+version: "3"
+
+services:
+  ##########################
+  ### SETUP SERVER CONTAINER
+  ##########################
+  server:
+    build: ./todo-api
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - PORT=${PORT}
+      - NODE_ENV=development
+    ports:
+      - ${PORT}:${PORT}
+    volumes:
+      # Map client src to server src to hot reload
+      - ./todo-api/:app/todo-api/
+    command: npm start
+    links:
+      - db
+    restart: always
+  ##########################
+  ### SETUP CLIENT CONTAINER
+  ##########################
+  client:
+    build: ./todo-frontend
+    environment:
+      - REACT_APP_PORT=${REACT_APP_PORT}
+      - CHOKIDAR_USEPOLLING=${CHOKIDAR_USEPOLLING}
+
+    ports:
+      - ${REACT_APP_PORT}:${REACT_APP_PORT}
+    volumes:
+      - ./todo-frontend/src:/app/todo-frontend/src
+      - ./todo-frontend/public:/app/todo-frontend/public
+    links:
+      - server
+    command: npm run start
+    restart: always
+  ##########################
+  ### SETUP DB CONTAINER
+  ##########################
+  db:
+    image: mongo
+    ports:
+      - ${MONGO_PORT}:${MONGO_PORT}
+    restart: always
